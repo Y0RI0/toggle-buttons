@@ -1,4 +1,4 @@
-package com.example;
+package com.hotkeybuttons;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
@@ -13,11 +13,8 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 @Slf4j
-@PluginDescriptor(
-	name = "Example"
-)
-public class ExamplePlugin extends Plugin
-{
+@PluginDescriptor(name = "Example")
+public class ExamplePlugin extends Plugin {
 	@Inject
 	private Client client;
 
@@ -25,29 +22,24 @@ public class ExamplePlugin extends Plugin
 	private ExampleConfig config;
 
 	@Override
-	protected void startUp() throws Exception
-	{
+	protected void startUp() throws Exception {
 		log.debug("Example started!");
 	}
 
 	@Override
-	protected void shutDown() throws Exception
-	{
+	protected void shutDown() throws Exception {
 		log.debug("Example stopped!");
 	}
 
 	@Subscribe
-	public void onGameStateChanged(GameStateChanged gameStateChanged)
-	{
-		if (gameStateChanged.getGameState() == GameState.LOGGED_IN)
-		{
+	public void onGameStateChanged(GameStateChanged gameStateChanged) {
+		if (gameStateChanged.getGameState() == GameState.LOGGED_IN) {
 			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Example says " + config.greeting(), null);
 		}
 	}
 
 	@Provides
-	ExampleConfig provideConfig(ConfigManager configManager)
-	{
+	ExampleConfig provideConfig(ConfigManager configManager) {
 		return configManager.getConfig(ExampleConfig.class);
 	}
 }

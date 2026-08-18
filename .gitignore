@@ -1,5 +1,9 @@
 .gradle
 build
+gradle.properties
+notes/
+.factorypath
+bin/
 .idea/
 .project
 .settings/
