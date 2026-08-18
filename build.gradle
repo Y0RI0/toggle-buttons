@@ -14,7 +14,7 @@ repositories {
 }
 
 def runeLiteVersion = 'latest.release'
-def pluginMainClass = 'com.hotkeybuttons.ExamplePluginTest'
+def pluginMainClass = 'com.hotkeybuttons.HotkeyButtonsPluginTest'
 
 dependencies {
 	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
