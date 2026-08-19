@@ -1,9 +1,9 @@
 package com.togglebuttons;
 
 import net.runelite.client.config.Config;
+import net.runelite.client.config.Keybind;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
-import net.runelite.client.config.Keybind;
 
 @ConfigGroup("togglebuttons")
 public interface ToggleButtonsConfig extends Config

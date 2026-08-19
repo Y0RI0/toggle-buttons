@@ -3,13 +3,17 @@ package com.togglebuttons;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
 import lombok.extern.slf4j.Slf4j;
+
 import net.runelite.client.config.ConfigManager;
 
 @Slf4j

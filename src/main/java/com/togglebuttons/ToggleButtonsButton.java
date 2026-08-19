@@ -2,8 +2,10 @@ package com.togglebuttons;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.Data;
 
+// Defines 1 clickable "button" object's settings
 @Data
 class ToggleButtonsButton
 {

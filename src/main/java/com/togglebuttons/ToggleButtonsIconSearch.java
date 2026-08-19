@@ -1,11 +1,15 @@
 package com.togglebuttons;
 
 import java.util.function.IntConsumer;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
 import lombok.extern.slf4j.Slf4j;
+
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.chatbox.ChatboxItemSearch;
 

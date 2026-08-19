@@ -8,11 +8,14 @@ package com.togglebuttons;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.BorderFactory;
@@ -23,11 +26,15 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
@@ -53,6 +60,7 @@ class ToggleButtonsPluginPanel extends PluginPanel
 	private final JPanel editorContainer = new JPanel();
 
 	private String selectedId;
+	private static final int menuPadding = 5;
 
 	@Inject
 	ToggleButtonsPluginPanel(
@@ -71,25 +79,49 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		setLayout(new BorderLayout(0, 10));
 		setBorder(new EmptyBorder(10, 10, 10, 10));
 
-		final JButton addButton = new JButton("Add new button");
-		addButton.setToolTipText("Add a new button to the grid");
-		addButton.addActionListener(e ->
+		// PluginPanel's internal scroll pane has no getter; find it in the wrapper
+		for (Component c : getWrappedPanel().getComponents())
+		{
+			if (c instanceof JScrollPane)
+			{
+				((JScrollPane) c).setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+			}
+		}
+
+		final JButton addNewButton = new JButton("Add Button +");
+		addNewButton.setToolTipText("Adds a new clickable button to the sidebar and game window");
+		addNewButton.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		addNewButton.setForeground(Color.WHITE);
+		addNewButton.addActionListener(e ->
 		{
 			selectedId = store.createButton().getId();
 			rebuild();
 		});
 
 		final JPanel header = new JPanel(new BorderLayout(0, 5));
-		header.add(new JLabel("Buttons"), BorderLayout.NORTH);
-		header.add(addButton, BorderLayout.SOUTH);
+		header.setBorder(new EmptyBorder(5, 0, 0, 0)); // top,left,bottom,right
+
+		final JLabel titleLabel = new JLabel("Toggle Buttons Plugin", SwingConstants.CENTER);
+		titleLabel.setForeground(Color.YELLOW);
+		final JPanel headerLabelRow = new JPanel(new BorderLayout());
+		headerLabelRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		headerLabelRow.add(titleLabel);
+		header.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		header.add(headerLabelRow);
+		header.add(addNewButton, BorderLayout.SOUTH);
 		add(header, BorderLayout.NORTH);
 
 		final JPanel content = new JPanel();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 		final JPanel gridWrapper = new JPanel(new BorderLayout());
 		gridWrapper.add(buttonGrid, BorderLayout.NORTH);
+		gridWrapper.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		buttonGrid.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		gridWrapper.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createLineBorder(ColorScheme.DARKER_GRAY_COLOR),
+			new EmptyBorder(6, 6, 6, 6)));
 		content.add(gridWrapper);
-		content.add(Box.createVerticalStrut(10));
+		// content.add(Box.createVerticalStrut(10));
 		editorContainer.setLayout(new BorderLayout());
 		content.add(editorContainer);
 		add(content, BorderLayout.CENTER);
@@ -138,6 +170,7 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		cell.setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
 		cell.setToolTipText(button.getName());
 		cell.setFocusPainted(false);
+		cell.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
 		if (button.getIconItemId() >= 0)
 		{
@@ -162,12 +195,14 @@ class ToggleButtonsPluginPanel extends PluginPanel
 	private JPanel buildEditor(ToggleButtonsButton button)
 	{
 		final JPanel editor = new JPanel();
+		// Sidebar Panel Border
 		editor.setLayout(new BoxLayout(editor, BoxLayout.Y_AXIS));
-		editor.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createLineBorder(ColorScheme.DARKER_GRAY_COLOR),
-			new EmptyBorder(6, 6, 6, 6)));
+		editor.setBorder(
+			BorderFactory.createCompoundBorder(
+				BorderFactory.createLineBorder(ColorScheme.DARKER_GRAY_COLOR),
+				new EmptyBorder(6, 6, 6, 6)));
 
-		// Name
+		// Name - Button Setting
 		final JTextField nameField = new JTextField(button.getName());
 		nameField.addActionListener(e -> saveName(button.getId(), nameField.getText()));
 		nameField.addFocusListener(new FocusAdapter()
@@ -179,13 +214,12 @@ class ToggleButtonsPluginPanel extends PluginPanel
 			}
 		});
 		editor.add(labeledRow("Name", nameField));
-		editor.add(Box.createVerticalStrut(5));
+		editor.add(Box.createVerticalStrut(menuPadding));
 
-		// Icon
+		// Icon - Button Setting
 		final JButton selectIconButton = new JButton("Select icon");
 		selectIconButton.setToolTipText("Search for an item to use as the button icon (requires being logged in)");
-		selectIconButton.addActionListener(e -> iconSearch.open(itemId ->
-			SwingUtilities.invokeLater(() -> updateButton(button.getId(), b -> b.setIconItemId(itemId)))));
+		selectIconButton.addActionListener(e -> iconSearch.open(itemId -> SwingUtilities.invokeLater(() -> updateButton(button.getId(), b -> b.setIconItemId(itemId)))));
 
 		final JButton clearIconButton = new JButton("Clear icon");
 		clearIconButton.addActionListener(e -> updateButton(button.getId(), b -> b.setIconItemId(-1)));
@@ -194,9 +228,9 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		iconRow.add(selectIconButton);
 		iconRow.add(clearIconButton);
 		editor.add(iconRow);
-		editor.add(Box.createVerticalStrut(5));
+		editor.add(Box.createVerticalStrut(menuPadding));
 
-		// Size
+		// Size - Button Setting
 		final JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(button.getWidth(), 16, 256, 1));
 		widthSpinner.addChangeListener(e -> updateButton(button.getId(), b -> b.setWidth((int) widthSpinner.getValue()), false));
 		editor.add(labeledRow("Width", widthSpinner));
@@ -205,15 +239,17 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		final JSpinner heightSpinner = new JSpinner(new SpinnerNumberModel(button.getHeight(), 16, 256, 1));
 		heightSpinner.addChangeListener(e -> updateButton(button.getId(), b -> b.setHeight((int) heightSpinner.getValue()), false));
 		editor.add(labeledRow("Height", heightSpinner));
-		editor.add(Box.createVerticalStrut(5));
+		editor.add(Box.createVerticalStrut(menuPadding));
 
-		// Resizable
+		// Resizable - Button Setting
 		final JCheckBox resizableBox = new JCheckBox("Resizable (alt-drag edges)", button.isResizable());
 		resizableBox.addActionListener(e -> updateButton(button.getId(), b -> b.setResizable(resizableBox.isSelected()), false));
-		editor.add(resizableBox);
-		editor.add(Box.createVerticalStrut(5));
+		final JPanel resizableBoxRow = new JPanel(new BorderLayout());
+		resizableBoxRow.add(resizableBox);
+		editor.add(resizableBoxRow, BorderLayout.WEST);
+		editor.add(Box.createVerticalStrut(menuPadding));
 
-		// Colors
+		// Colors - Button Setting
 		final JPanel colorRow = new JPanel(new GridLayout(1, 2, 4, 0));
 		colorRow.add(colorButton("Color", new Color(button.getButtonColor(), true),
 			c -> updateButton(button.getId(), b -> b.setButtonColor(c.getRGB()), false)));
@@ -222,8 +258,13 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		editor.add(colorRow);
 		editor.add(Box.createVerticalStrut(10));
 
-		// Plugins toggled by this button
-		editor.add(new JLabel("Plugins toggled by this button"));
+		// Plugins toggled - Button Setting
+		final JLabel pluginToggleText = new JLabel(
+			"Plugins toggled by this button");
+		final JPanel pluginToggleLabelRow = new JPanel(new BorderLayout());
+		pluginToggleLabelRow.add(pluginToggleText, BorderLayout.CENTER);
+		editor.add(pluginToggleLabelRow);
+
 		editor.add(Box.createVerticalStrut(5));
 
 		final JComboBox<String> pluginSelect = new JComboBox<>();
@@ -250,7 +291,7 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		addPluginRow.add(pluginSelect, BorderLayout.CENTER);
 		addPluginRow.add(addPluginButton, BorderLayout.EAST);
 		editor.add(addPluginRow);
-		editor.add(Box.createVerticalStrut(5));
+		editor.add(Box.createVerticalStrut(menuPadding));
 
 		for (ToggleButtonsTarget target : button.getTargets())
 		{
@@ -286,10 +327,11 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		name.setToolTipText(target.getPluginName());
 		row.add(name, BorderLayout.NORTH);
 
-		final JComboBox<String> modeSelect = new JComboBox<>(new String[]{MODE_ENABLE_DISABLE, MODE_ON_OFF});
+		final JComboBox<String> modeSelect = new JComboBox<>(new String[] { MODE_ENABLE_DISABLE, MODE_ON_OFF });
 		modeSelect.setSelectedItem(target.isDisablePlugin() ? MODE_ENABLE_DISABLE : MODE_ON_OFF);
-		modeSelect.setToolTipText("Enable/disable: the button enables or disables the plugin in RuneLite. "
-			+ "Turn on/off: the button only stops or starts the plugin without changing its enabled setting.");
+		modeSelect.setToolTipText(
+			"Enable/disable: the button enables or disables the plugin in RuneLite. Persistent in your config."
+				+ "Turn on/off: the button only stops or starts the plugin without persisting across sessions.");
 		modeSelect.addActionListener(e ->
 		{
 			final boolean disablePlugin = MODE_ENABLE_DISABLE.equals(modeSelect.getSelectedItem());
@@ -301,9 +343,8 @@ class ToggleButtonsPluginPanel extends PluginPanel
 
 		final JButton removeTargetButton = new JButton("X");
 		removeTargetButton.setToolTipText("Remove plugin from button");
-		removeTargetButton.addActionListener(e ->
-			updateButton(buttonId, b -> b.getTargets().removeIf(
-				t -> target.getPluginName().equalsIgnoreCase(t.getPluginName()))));
+		removeTargetButton.addActionListener(e -> updateButton(buttonId, b -> b.getTargets().removeIf(
+			t -> target.getPluginName().equalsIgnoreCase(t.getPluginName()))));
 		row.add(removeTargetButton, BorderLayout.EAST);
 
 		return row;

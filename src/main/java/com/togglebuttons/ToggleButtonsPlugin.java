@@ -2,7 +2,6 @@ package com.togglebuttons;
 
 import com.google.inject.Provides;
 
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -20,14 +19,8 @@ import net.runelite.client.events.ConfigChanged;
 
 import net.runelite.client.game.ItemManager;
 
-import net.runelite.client.input.KeyManager;
-import net.runelite.client.input.MouseAdapter;
-import net.runelite.client.input.MouseManager;
-
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-
-import net.runelite.client.util.HotkeyListener;
 
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.ui.ClientToolbar;
@@ -43,19 +36,17 @@ public class ToggleButtonsPlugin extends Plugin
 	@Inject
 	private OverlayManager overlayManager;
 	@Inject
-	private MouseManager mouseManager;
-	@Inject
-	private KeyManager keyManager;
-	@Inject
 	private ToggleButtonsConfig config;
 	@Inject
 	private ConfigManager configManager;
 	@Inject
 	private ItemManager itemManager;
 	@Inject
-	private ToggleButtonsToggle toggle;
-	@Inject
 	private ToggleButtonsButtonStore buttonStore;
+	@Inject
+	private ToggleButtonsMouseBehavior mouseBehavior;
+	@Inject
+	private ToggleButtonsVisibility visibility;
 	@Inject
 	private ClientToolbar clientToolbar;
 	@Inject
@@ -69,63 +60,14 @@ public class ToggleButtonsPlugin extends Plugin
 	@Getter
 	private boolean navButtonIsSelected;
 
-	private final MouseAdapter mouseAdapter = new MouseAdapter()
-	{
-		@Override
-		public MouseEvent mousePressed(MouseEvent e)
-		{
-			if (!config.showButtons() ||
-				!SwingUtilities.isLeftMouseButton(e) ||
-				e.isAltDown())
-			{
-				return e;
-			}
-
-			for (ToggleButtonsOverlay overlay : overlays.values())
-			{
-				if (overlay.getBounds().contains(e.getPoint()))
-				{
-					overlay.setPressed(true);
-					log.debug("Button '{}' activated via mouse", overlay.getButton().getName());
-					toggle.toggleAll(overlay.getButton().getTargets());
-					e.consume();
-					break;
-				}
-			}
-			return e;
-		}
-
-		@Override
-		public MouseEvent mouseReleased(MouseEvent e)
-		{
-			if (SwingUtilities.isLeftMouseButton(e))
-			{
-				for (ToggleButtonsOverlay overlay : overlays.values())
-				{
-					overlay.setPressed(false);
-				}
-			}
-			return e;
-		}
-	};
-
-	private final HotkeyListener hotkeyListener = new HotkeyListener(() -> config.hotkey())
-	{
-		@Override
-		public void hotkeyPressed()
-		{
-			configManager.setConfiguration("togglebuttons", "showButtons", !config.showButtons());
-		}
-	};
-
 	@Override
 	protected void startUp() throws Exception
 	{
 		buttonStore.migrateLegacy();
 		rebuildOverlays();
-		mouseManager.registerMouseListener(mouseAdapter);
-		keyManager.registerKeyListener(hotkeyListener);
-		log.debug("Toggle Buttons started!");
+		mouseBehavior.setOverlaySupplier(overlays::values);
+		mouseBehavior.startUp();
+		visibility.startUp();
 
 		// Adds button to sidebar with icon
 		final BufferedImage sidebarIcon = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
@@ -138,14 +80,15 @@ public class ToggleButtonsPlugin extends Plugin
 			.build();
 		clientToolbar.addNavigation(navButton);
 		SwingUtilities.invokeLater(panel::rebuild);
+		log.debug("Toggle Buttons started!");
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
 		removeOverlays();
-		mouseManager.unregisterMouseListener(mouseAdapter);
-		keyManager.unregisterKeyListener(hotkeyListener);
+		mouseBehavior.shutDown();
+		visibility.shutDown();
 		clientToolbar.removeNavigation(navButton);
 		log.debug("Toggle Buttons stopped!");
 	}
