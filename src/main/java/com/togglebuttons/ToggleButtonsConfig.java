@@ -1,5 +1,9 @@
 package com.togglebuttons;
 
+/*
+* Config items for the plugin (not panel) settings
+*/
+
 import net.runelite.client.config.Config;
 import net.runelite.client.config.Keybind;
 import net.runelite.client.config.ConfigGroup;

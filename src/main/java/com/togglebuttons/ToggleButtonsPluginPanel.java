@@ -4,6 +4,8 @@ package com.togglebuttons;
 * Crafts the view of the plugin's sidebar panel,
 * where buttons are managed in a grid and the
 * selected button's settings are edited below it
+* AKA, the file that made me realize why nobody learns java
+* for UI work in 2026
 */
 
 import java.awt.BorderLayout;
@@ -119,9 +121,9 @@ class ToggleButtonsPluginPanel extends PluginPanel
 			rebuild();
 		});
 
+		// Draw the header, plugin name add new button button
 		final JPanel header = new JPanel(new BorderLayout(0, 5));
 		header.setBorder(new EmptyBorder(5, 0, 0, 0)); // top,left,bottom,right
-
 		final JLabel titleLabel = new JLabel("Toggle Buttons Plugin", SwingConstants.CENTER);
 		titleLabel.setForeground(ToggleButtonsStyle.RUNESCAPE_YELLOW);
 		final JPanel headerLabelRow = new JPanel(new BorderLayout());
@@ -132,6 +134,7 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		header.add(addNewButton, BorderLayout.SOUTH);
 		add(header, BorderLayout.NORTH);
 
+		// Box layout grid styling
 		final JPanel content = new JPanel();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 		final JPanel gridWrapper = new JPanel(new BorderLayout());
@@ -142,7 +145,6 @@ class ToggleButtonsPluginPanel extends PluginPanel
 			BorderFactory.createLineBorder(ToggleButtonsStyle.PANEL_ACCENT),
 			new EmptyBorder(6, 6, 6, 6)));
 		content.add(gridWrapper);
-		// content.add(Box.createVerticalStrut(10));
 		editorContainer.setLayout(new BorderLayout());
 		content.add(editorContainer);
 		add(content, BorderLayout.CENTER);
@@ -160,6 +162,8 @@ class ToggleButtonsPluginPanel extends PluginPanel
 	{
 		final List<ToggleButtonsButton> buttons = store.getButtons();
 
+		// Don't let users make an absurd amount of buttons and say something when
+		// we get there
 		final boolean atButtonLimit = buttons.size() >= ToggleButtonsButton.MAX_BUTTONS;
 		addNewButton.setEnabled(!atButtonLimit);
 		addNewButton.setToolTipText(atButtonLimit
@@ -236,7 +240,7 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		{
 			// Delegate to the same press/release logic as the game overlay so
 			// behavior (including peek) is identical; look the button up fresh
-			// from the store so edits apply without waiting for a rebuild
+			// from the buttonStore so edits apply without waiting for a rebuild
 			cell.addMouseListener(new MouseAdapter()
 			{
 				@Override

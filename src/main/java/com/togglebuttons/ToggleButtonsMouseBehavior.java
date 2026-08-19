@@ -3,6 +3,7 @@ package com.togglebuttons;
 /*
 * Handles left mouse clicks on button overlays,
 * triggering their plugin toggle states
+* 1 click should always be 1 toggle actions, not simulation
 */
 
 import java.awt.event.MouseEvent;

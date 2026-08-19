@@ -1,5 +1,9 @@
 package com.togglebuttons;
 
+/*
+* Game window button overlay rendering logic
+*/
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -52,6 +56,8 @@ public class ToggleButtonsOverlay extends Overlay
 		return "toggleButtonsButton_" + button.getId();
 	}
 
+	// Mostly borrowed from prior art in
+	// https://github.com/StationEarthxo/Stations-Cozy-Carts/blob/master/src/main/java/com/cartmount/CartToggleOverlay.java
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
@@ -95,37 +101,37 @@ public class ToggleButtonsOverlay extends Overlay
 	{
 		switch (shape)
 		{
-			case SQUARE:
-				return new Rectangle2D.Double(0, 0, w, h);
-			case CIRCLE:
-				final int d = Math.min(w, h);
-				return new Ellipse2D.Double((w - d) / 2.0, (h - d) / 2.0, d, d);
-			case DIAMOND:
-				return polygon(new double[]{w / 2.0, w, w / 2.0, 0}, new double[]{0, h / 2.0, h, h / 2.0});
-			case TRIANGLE_UP:
-				return polygon(new double[]{w / 2.0, w, 0}, new double[]{0, h, h});
-			case TRIANGLE_DOWN:
-				return polygon(new double[]{0, w, w / 2.0}, new double[]{0, 0, h});
-			case HEXAGON:
-				return polygon(
-					new double[]{w * 0.25, w * 0.75, w, w * 0.75, w * 0.25, 0},
-					new double[]{0, 0, h / 2.0, h, h, h / 2.0});
-			case OCTAGON:
-				final double c = Math.min(w, h) / 3.0;
-				return polygon(
-					new double[]{c, w - c, w, w, w - c, c, 0, 0},
-					new double[]{0, 0, c, h - c, h, h, h - c, c});
-			case PARALLELOGRAM:
-				final double skew = w / 4.0;
-				return polygon(new double[]{skew, w, w - skew, 0}, new double[]{0, 0, h, h});
-			case STAR:
-				return star(w, h);
-			case GEAR:
-				return gear(w, h);
-			case ROUNDED_RECTANGLE:
-			default:
-				final int arc = Math.min(w, h) / 4;
-				return new RoundRectangle2D.Double(0, 0, w, h, arc, arc);
+		case SQUARE:
+			return new Rectangle2D.Double(0, 0, w, h);
+		case CIRCLE:
+			final int d = Math.min(w, h);
+			return new Ellipse2D.Double((w - d) / 2.0, (h - d) / 2.0, d, d);
+		case DIAMOND:
+			return polygon(new double[] { w / 2.0, w, w / 2.0, 0 }, new double[] { 0, h / 2.0, h, h / 2.0 });
+		case TRIANGLE_UP:
+			return polygon(new double[] { w / 2.0, w, 0 }, new double[] { 0, h, h });
+		case TRIANGLE_DOWN:
+			return polygon(new double[] { 0, w, w / 2.0 }, new double[] { 0, 0, h });
+		case HEXAGON:
+			return polygon(
+				new double[] { w * 0.25, w * 0.75, w, w * 0.75, w * 0.25, 0 },
+				new double[] { 0, 0, h / 2.0, h, h, h / 2.0 });
+		case OCTAGON:
+			final double c = Math.min(w, h) / 3.0;
+			return polygon(
+				new double[] { c, w - c, w, w, w - c, c, 0, 0 },
+				new double[] { 0, 0, c, h - c, h, h, h - c, c });
+		case PARALLELOGRAM:
+			final double skew = w / 4.0;
+			return polygon(new double[] { skew, w, w - skew, 0 }, new double[] { 0, 0, h, h });
+		case STAR:
+			return star(w, h);
+		case GEAR:
+			return gear(w, h);
+		case ROUNDED_RECTANGLE:
+		default:
+			final int arc = Math.min(w, h) / 4;
+			return new RoundRectangle2D.Double(0, 0, w, h, arc, arc);
 		}
 	}
 

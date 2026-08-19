@@ -1,5 +1,7 @@
 package com.togglebuttons;
 
+// mentally I'm considering this "main"
+
 import com.google.inject.Provides;
 
 import java.awt.image.BufferedImage;
@@ -37,8 +39,6 @@ public class ToggleButtonsPlugin extends Plugin
 	private OverlayManager overlayManager;
 	@Inject
 	private ToggleButtonsConfig config;
-	@Inject
-	private ConfigManager configManager;
 	@Inject
 	private ItemManager itemManager;
 	@Inject

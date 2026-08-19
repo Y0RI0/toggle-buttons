@@ -1,5 +1,9 @@
 package com.togglebuttons;
 
+/*
+* Holds the logic for the array of configured "button" objects
+*/
+
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;

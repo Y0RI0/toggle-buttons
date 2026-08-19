@@ -1,5 +1,9 @@
 package com.togglebuttons;
 
+/*
+* Contains helper logic for performing an icon search against the game's cached itemIds
+*/
+
 import java.util.function.IntConsumer;
 
 import javax.inject.Inject;
@@ -11,6 +15,7 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 
 import net.runelite.client.callback.ClientThread;
+//Library which handles the fancy ability to item search as seen in many popular plugins
 import net.runelite.client.game.chatbox.ChatboxItemSearch;
 
 @Slf4j
