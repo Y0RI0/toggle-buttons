@@ -27,6 +27,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 @PluginDescriptor(
@@ -69,7 +70,7 @@ public class ToggleButtonsPlugin extends Plugin
 		visibility.startUp();
 
 		// Adds button to sidebar with icon
-		final BufferedImage sidebarIcon = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+		final BufferedImage sidebarIcon = ImageUtil.loadImageResource(getClass(), "panel_icon.png");
 		this.navButtonIsSelected = false;
 		navButton = NavigationButton.builder()
 			.tooltip("Toggle Buttons")
