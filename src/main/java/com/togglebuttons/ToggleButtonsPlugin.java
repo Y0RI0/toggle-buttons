@@ -31,8 +31,13 @@ import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Toggle Buttons"
+	name = "Toggle Buttons",
+	description = "Runelite plugin for creating clickable buttons that toggle other plugins",
+	tags = {
+		"button", "buttons", "toggle", "click", "peek", "hide", "unhide"
+	}
 )
+
 public class ToggleButtonsPlugin extends Plugin
 {
 	// Local API injections

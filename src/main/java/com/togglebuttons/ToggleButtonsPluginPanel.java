@@ -336,13 +336,21 @@ class ToggleButtonsPluginPanel extends PluginPanel
 			chooser.setFileFilter(new FileNameExtensionFilter("Images (png, jpg, gif, bmp)", "png", "jpg", "jpeg", "gif", "bmp"));
 			if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
-				final String path = chooser.getSelectedFile().getAbsolutePath();
-				updateButton(button.getId(), b -> b.setIconImagePath(path));
+				// Copy into .runelite/toggle-buttons/ and persist the stored name
+				final String storedName = ToggleButtonsImageLoader.store(button.getId(), chooser.getSelectedFile());
+				if (storedName != null)
+				{
+					updateButton(button.getId(), b -> b.setIconImagePath(storedName));
+				}
 			}
 		});
 
 		final JButton clearImageButton = new JButton("Clear img");
-		clearImageButton.addActionListener(e -> updateButton(button.getId(), b -> b.setIconImagePath(null)));
+		clearImageButton.addActionListener(e ->
+		{
+			ToggleButtonsImageLoader.delete(button.getIconImagePath());
+			updateButton(button.getId(), b -> b.setIconImagePath(null));
+		});
 
 		final JPanel imageRow = new JPanel(new GridLayout(1, 2, 4, 0));
 		imageRow.add(selectImageButton);
@@ -451,6 +459,7 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		removeButton.setForeground(ToggleButtonsStyle.TEXT_COLOR);
 		removeButton.addActionListener(e ->
 		{
+			ToggleButtonsImageLoader.delete(button.getIconImagePath());
 			final List<ToggleButtonsButton> buttons = store.getButtons();
 			buttons.removeIf(b -> b.getId().equals(button.getId()));
 			store.setButtons(buttons);
