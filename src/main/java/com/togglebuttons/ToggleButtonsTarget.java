@@ -1,5 +1,9 @@
 package com.togglebuttons;
 
+/*
+* Simple class to hold the parameters of a single button target
+*/
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

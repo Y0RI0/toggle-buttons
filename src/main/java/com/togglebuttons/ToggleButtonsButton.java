@@ -11,16 +11,20 @@ class ToggleButtonsButton
 {
 	static final int DEFAULT_WIDTH = 40;
 	static final int DEFAULT_HEIGHT = 40;
-	static final int DEFAULT_BUTTON_COLOR = 0x800080FF;
-	static final int DEFAULT_PRESSED_COLOR = 0xD260C0FF;
+	static final int MAX_TARGETS = 50;
+	static final int MAX_BUTTONS = 100;
 
 	private String id;
 	private String name = "Button";
 	private int iconItemId = -1;
+	// Absolute path to a local image file; takes priority over iconItemId
+	private String iconImagePath;
 	private int width = DEFAULT_WIDTH;
 	private int height = DEFAULT_HEIGHT;
 	private boolean resizable;
-	private int buttonColor = DEFAULT_BUTTON_COLOR;
-	private int pressedColor = DEFAULT_PRESSED_COLOR;
+	private int buttonColor = ToggleButtonsStyle.DEFAULT_BUTTON_COLOR;
+	private int pressedColor = ToggleButtonsStyle.DEFAULT_PRESSED_COLOR;
+	private ToggleButtonsShape shape = ToggleButtonsShape.ROUNDED_RECTANGLE;
+	private boolean toggleWhileHeld;
 	private List<ToggleButtonsTarget> targets = new ArrayList<>();
 }

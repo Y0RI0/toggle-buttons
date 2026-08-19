@@ -65,8 +65,7 @@ class ToggleButtonsMouseBehavior extends MouseAdapter
 			if (overlay.getBounds().contains(e.getPoint()))
 			{
 				overlay.setPressed(true);
-				log.debug("Button '{}' activated via mouse", overlay.getButton().getName());
-				toggle.toggleAll(overlay.getButton().getTargets());
+				toggle.press(overlay.getButton());
 				e.consume();
 				break;
 			}
@@ -79,6 +78,8 @@ class ToggleButtonsMouseBehavior extends MouseAdapter
 	{
 		if (SwingUtilities.isLeftMouseButton(e))
 		{
+			toggle.release();
+
 			for (ToggleButtonsOverlay overlay : overlaySupplier.get())
 			{
 				overlay.setPressed(false);

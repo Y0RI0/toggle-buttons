@@ -3,6 +3,13 @@ package com.togglebuttons;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.geom.Area;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 
 import lombok.Getter;
@@ -68,8 +75,9 @@ public class ToggleButtonsOverlay extends Overlay
 			height = Math.max(MIN_SIZE, preferred.height);
 		}
 
+		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		graphics.setColor(new Color(pressed ? button.getPressedColor() : button.getButtonColor(), true));
-		graphics.fillRect(0, 0, width, height);
+		graphics.fill(buildShape(button.getShape(), width, height));
 
 		final BufferedImage img = icon;
 		if (img != null)
@@ -81,5 +89,106 @@ public class ToggleButtonsOverlay extends Overlay
 		}
 
 		return new Dimension(width, height);
+	}
+
+	private static Shape buildShape(ToggleButtonsShape shape, int w, int h)
+	{
+		switch (shape)
+		{
+			case SQUARE:
+				return new Rectangle2D.Double(0, 0, w, h);
+			case CIRCLE:
+				final int d = Math.min(w, h);
+				return new Ellipse2D.Double((w - d) / 2.0, (h - d) / 2.0, d, d);
+			case DIAMOND:
+				return polygon(new double[]{w / 2.0, w, w / 2.0, 0}, new double[]{0, h / 2.0, h, h / 2.0});
+			case TRIANGLE_UP:
+				return polygon(new double[]{w / 2.0, w, 0}, new double[]{0, h, h});
+			case TRIANGLE_DOWN:
+				return polygon(new double[]{0, w, w / 2.0}, new double[]{0, 0, h});
+			case HEXAGON:
+				return polygon(
+					new double[]{w * 0.25, w * 0.75, w, w * 0.75, w * 0.25, 0},
+					new double[]{0, 0, h / 2.0, h, h, h / 2.0});
+			case OCTAGON:
+				final double c = Math.min(w, h) / 3.0;
+				return polygon(
+					new double[]{c, w - c, w, w, w - c, c, 0, 0},
+					new double[]{0, 0, c, h - c, h, h, h - c, c});
+			case PARALLELOGRAM:
+				final double skew = w / 4.0;
+				return polygon(new double[]{skew, w, w - skew, 0}, new double[]{0, 0, h, h});
+			case STAR:
+				return star(w, h);
+			case GEAR:
+				return gear(w, h);
+			case ROUNDED_RECTANGLE:
+			default:
+				final int arc = Math.min(w, h) / 4;
+				return new RoundRectangle2D.Double(0, 0, w, h, arc, arc);
+		}
+	}
+
+	private static Shape polygon(double[] xs, double[] ys)
+	{
+		final Path2D.Double path = new Path2D.Double();
+		path.moveTo(xs[0], ys[0]);
+		for (int i = 1; i < xs.length; i++)
+		{
+			path.lineTo(xs[i], ys[i]);
+		}
+		path.closePath();
+		return path;
+	}
+
+	// 5-point star scaled to the button bounds
+	private static Shape star(int w, int h)
+	{
+		final double cx = w / 2.0;
+		final double cy = h / 2.0;
+		final double outerX = w / 2.0;
+		final double outerY = h / 2.0;
+		final double innerX = outerX * 0.4;
+		final double innerY = outerY * 0.4;
+
+		final Path2D.Double path = new Path2D.Double();
+		for (int i = 0; i < 10; i++)
+		{
+			final double angle = -Math.PI / 2 + i * Math.PI / 5;
+			final double rx = (i % 2 == 0) ? outerX : innerX;
+			final double ry = (i % 2 == 0) ? outerY : innerY;
+			final double x = cx + rx * Math.cos(angle);
+			final double y = cy + ry * Math.sin(angle);
+			if (i == 0)
+			{
+				path.moveTo(x, y);
+			}
+			else
+			{
+				path.lineTo(x, y);
+			}
+		}
+		path.closePath();
+		return path;
+	}
+
+	// Circular gear with 8 teeth scaled to the button bounds
+	private static Shape gear(int w, int h)
+	{
+		final double cx = w / 2.0;
+		final double cy = h / 2.0;
+		final double r = Math.min(w, h) / 2.0;
+		final double bodyRadius = r * 0.78;
+		final double toothWidth = r * 0.35;
+
+		final Area area = new Area(new Ellipse2D.Double(cx - bodyRadius, cy - bodyRadius, bodyRadius * 2, bodyRadius * 2));
+		for (int i = 0; i < 8; i++)
+		{
+			final java.awt.geom.AffineTransform rotate = java.awt.geom.AffineTransform.getRotateInstance(i * Math.PI / 4, cx, cy);
+			final Shape tooth = rotate.createTransformedShape(
+				new Rectangle2D.Double(cx - toothWidth / 2, cy - r, toothWidth, r));
+			area.add(new Area(tooth));
+		}
+		return area;
 	}
 }

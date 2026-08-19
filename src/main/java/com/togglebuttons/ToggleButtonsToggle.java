@@ -1,12 +1,20 @@
 package com.togglebuttons;
 
+/*
+* Logic which handles *what* the toggle button targets to toggle
+*/
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
 import javax.swing.SwingUtilities;
+
 import lombok.extern.slf4j.Slf4j;
+
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginInstantiationException;
@@ -38,6 +46,30 @@ class ToggleButtonsToggle
 				toggleOnEdt(target);
 			}
 		});
+	}
+
+	// Targets held for reversion by a pressed toggle-while-held (peek) button
+	private List<ToggleButtonsTarget> heldTargets;
+
+	// Shared press semantics for the game overlay and the sidebar grid:
+	// toggles the button's targets, and remembers them for reversion on
+	// release when the button is in toggle-while-held (peek) mode
+	void press(ToggleButtonsButton button)
+	{
+		log.debug("Button '{}' pressed", button.getName());
+		toggleAll(button.getTargets());
+		heldTargets = button.isToggleWhileHeld() ? button.getTargets() : null;
+	}
+
+	// Shared release semantics: reverts a peek button's toggles, no-op otherwise
+	void release()
+	{
+		if (heldTargets != null)
+		{
+			log.debug("Peek button released, reverting toggles");
+			toggleAll(heldTargets);
+			heldTargets = null;
+		}
 	}
 
 	List<String> getTogglablePluginNames()

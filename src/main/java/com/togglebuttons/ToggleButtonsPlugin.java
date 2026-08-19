@@ -63,7 +63,6 @@ public class ToggleButtonsPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		buttonStore.migrateLegacy();
 		rebuildOverlays();
 		mouseBehavior.setOverlaySupplier(overlays::values);
 		mouseBehavior.startUp();
@@ -99,7 +98,13 @@ public class ToggleButtonsPlugin extends Plugin
 		for (ToggleButtonsButton button : buttonStore.getButtons())
 		{
 			final ToggleButtonsOverlay overlay = new ToggleButtonsOverlay(config, button);
-			if (button.getIconItemId() >= 0)
+			// A local image takes priority over a searched item icon; never both
+			final java.awt.image.BufferedImage fileImage = ToggleButtonsImageLoader.load(button.getIconImagePath());
+			if (fileImage != null)
+			{
+				overlay.setIcon(fileImage);
+			}
+			else if (button.getIconItemId() >= 0)
 			{
 				overlay.setIcon(itemManager.getImage(button.getIconItemId()));
 			}
@@ -128,6 +133,11 @@ public class ToggleButtonsPlugin extends Plugin
 		if (ToggleButtonsButtonStore.BUTTONS_KEY.equals(event.getKey()))
 		{
 			rebuildOverlays();
+		}
+
+		if ("sidebarClickMode".equals(event.getKey()))
+		{
+			SwingUtilities.invokeLater(panel::rebuild);
 		}
 	}
 

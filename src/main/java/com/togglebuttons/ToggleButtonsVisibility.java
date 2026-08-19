@@ -8,6 +8,7 @@ package com.togglebuttons;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.util.HotkeyListener;

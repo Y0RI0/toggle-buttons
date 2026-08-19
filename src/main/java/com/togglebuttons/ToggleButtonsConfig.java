@@ -29,4 +29,18 @@ public interface ToggleButtonsConfig extends Config
 	{
 		return Keybind.NOT_SET;
 	}
+
+	@ConfigItem(
+		keyName = "sidebarClickMode",
+		name = "Sidebar left click",
+		description = "What clicking a button in the sidebar does.<br>"
+			+ "Open editor: opens the button's settings.<br>"
+			+ "Execute button: activates the button as if clicked<br>"
+			+ "in the game view; editing moves to right click.",
+		position = 2
+	)
+	default ToggleButtonsSidebarClickMode sidebarClickMode()
+	{
+		return ToggleButtonsSidebarClickMode.EDIT;
+	}
 }
