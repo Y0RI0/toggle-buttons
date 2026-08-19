@@ -1,27 +1,37 @@
 package com.togglebuttons;
 
 import com.google.inject.Provides;
+
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
+
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.client.callback.ClientThread;
+import lombok.Getter;
+import lombok.Setter;
+
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
+
 import net.runelite.client.game.ItemManager;
-import net.runelite.client.game.chatbox.ChatboxItemSearch;
+
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.input.MouseAdapter;
 import net.runelite.client.input.MouseManager;
+
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.PluginInstantiationException;
-import net.runelite.client.plugins.PluginManager;
-import net.runelite.client.ui.overlay.OverlayManager;
+
 import net.runelite.client.util.HotkeyListener;
+
+import net.runelite.client.ui.overlay.OverlayManager;
+import net.runelite.client.ui.ClientToolbar;
+import net.runelite.client.ui.NavigationButton;
 
 @Slf4j
 @PluginDescriptor(
@@ -29,52 +39,58 @@ import net.runelite.client.util.HotkeyListener;
 )
 public class ToggleButtonsPlugin extends Plugin
 {
+	// Local API injections
 	@Inject
 	private OverlayManager overlayManager;
-
 	@Inject
 	private MouseManager mouseManager;
-
 	@Inject
 	private KeyManager keyManager;
-
-	@Inject
-	private ToggleButtonsOverlay overlay;
-
 	@Inject
 	private ToggleButtonsConfig config;
-
-	@Inject
-	private Client client;
-
-	@Inject
-	private ClientThread clientThread;
-
 	@Inject
 	private ConfigManager configManager;
-
 	@Inject
 	private ItemManager itemManager;
-
 	@Inject
-	private ChatboxItemSearch itemSearch;
-
+	private ToggleButtonsToggle toggle;
 	@Inject
-	private PluginManager pluginManager;
+	private ToggleButtonsButtonStore buttonStore;
+	@Inject
+	private ClientToolbar clientToolbar;
+	@Inject
+	private ToggleButtonsPluginPanel panel;
+
+	// Local Vars
+	private final Map<String, ToggleButtonsOverlay> overlays = new LinkedHashMap<>();
+	private NavigationButton navButton;
+
+	@Setter
+	@Getter
+	private boolean navButtonIsSelected;
 
 	private final MouseAdapter mouseAdapter = new MouseAdapter()
 	{
 		@Override
 		public MouseEvent mousePressed(MouseEvent e)
 		{
-			if (config.showButton()
-				&& SwingUtilities.isLeftMouseButton(e)
-				&& !e.isAltDown()
-				&& overlay.getBounds().contains(e.getPoint()))
+			if (!config.showButtons() ||
+				!SwingUtilities.isLeftMouseButton(e) ||
+				e.isAltDown())
 			{
-				overlay.setPressed(true);
-				buttonActivated("mouse");
-				e.consume();
+				return e;
+			}
+
+			for (ToggleButtonsOverlay overlay : overlays.values())
+			{
+				if (overlay.getBounds().contains(e.getPoint()))
+				{
+					overlay.setPressed(true);
+					log.debug("Button '{}' activated via mouse", overlay.getButton().getName());
+					toggle.toggleAll(overlay.getButton().getTargets());
+					e.consume();
+					break;
+				}
 			}
 			return e;
 		}
@@ -82,9 +98,12 @@ public class ToggleButtonsPlugin extends Plugin
 		@Override
 		public MouseEvent mouseReleased(MouseEvent e)
 		{
-			if (overlay.isPressed() && SwingUtilities.isLeftMouseButton(e))
+			if (SwingUtilities.isLeftMouseButton(e))
 			{
-				overlay.setPressed(false);
+				for (ToggleButtonsOverlay overlay : overlays.values())
+				{
+					overlay.setPressed(false);
+				}
 			}
 			return e;
 		}
@@ -95,89 +114,64 @@ public class ToggleButtonsPlugin extends Plugin
 		@Override
 		public void hotkeyPressed()
 		{
-			overlay.setPressed(true);
-			buttonActivated("hotkey");
-		}
-
-		@Override
-		public void hotkeyReleased()
-		{
-			overlay.setPressed(false);
+			configManager.setConfiguration("togglebuttons", "showButtons", !config.showButtons());
 		}
 	};
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		overlayManager.add(overlay);
+		buttonStore.migrateLegacy();
+		rebuildOverlays();
 		mouseManager.registerMouseListener(mouseAdapter);
 		keyManager.registerKeyListener(hotkeyListener);
-		updateIcon();
 		log.debug("Toggle Buttons started!");
+
+		// Adds button to sidebar with icon
+		final BufferedImage sidebarIcon = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+		this.navButtonIsSelected = false;
+		navButton = NavigationButton.builder()
+			.tooltip("Toggle Buttons")
+			.icon(sidebarIcon)
+			.priority(6)
+			.panel(panel)
+			.build();
+		clientToolbar.addNavigation(navButton);
+		SwingUtilities.invokeLater(panel::rebuild);
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		overlayManager.remove(overlay);
+		removeOverlays();
 		mouseManager.unregisterMouseListener(mouseAdapter);
 		keyManager.unregisterKeyListener(hotkeyListener);
-		overlay.setPressed(false);
+		clientToolbar.removeNavigation(navButton);
 		log.debug("Toggle Buttons stopped!");
 	}
 
-	private void buttonActivated(String source)
+	private void rebuildOverlays()
 	{
-		log.debug("Button activated via {}", source);
-		toggleTargetPlugin();
+		removeOverlays();
+		for (ToggleButtonsButton button : buttonStore.getButtons())
+		{
+			final ToggleButtonsOverlay overlay = new ToggleButtonsOverlay(config, button);
+			if (button.getIconItemId() >= 0)
+			{
+				overlay.setIcon(itemManager.getImage(button.getIconItemId()));
+			}
+			overlays.put(button.getId(), overlay);
+			overlayManager.add(overlay);
+		}
 	}
 
-	private void toggleTargetPlugin()
+	private void removeOverlays()
 	{
-		final String target = config.targetPlugin().trim();
-		if (target.isEmpty())
+		for (ToggleButtonsOverlay overlay : overlays.values())
 		{
-			return;
+			overlayManager.remove(overlay);
 		}
-
-		SwingUtilities.invokeLater(() ->
-		{
-			for (Plugin plugin : pluginManager.getPlugins())
-			{
-				if (plugin == this)
-				{
-					continue;
-				}
-
-				final PluginDescriptor descriptor = plugin.getClass().getAnnotation(PluginDescriptor.class);
-				if (descriptor == null || !descriptor.name().equalsIgnoreCase(target))
-				{
-					continue;
-				}
-
-				try
-				{
-					final boolean enabled = pluginManager.isPluginEnabled(plugin);
-					pluginManager.setPluginEnabled(plugin, !enabled);
-					if (enabled)
-					{
-						pluginManager.stopPlugin(plugin);
-					}
-					else
-					{
-						pluginManager.startPlugin(plugin);
-					}
-					log.debug("Toggled plugin '{}' to {}", descriptor.name(), !enabled);
-				}
-				catch (PluginInstantiationException ex)
-				{
-					log.warn("Failed to toggle plugin '{}'", target, ex);
-				}
-				return;
-			}
-
-			log.debug("No plugin found matching '{}'", target);
-		});
+		overlays.clear();
 	}
 
 	@Subscribe
@@ -188,37 +182,10 @@ public class ToggleButtonsPlugin extends Plugin
 			return;
 		}
 
-		if ("selectIcon".equals(event.getKey()) && config.selectIcon())
+		if (ToggleButtonsButtonStore.BUTTONS_KEY.equals(event.getKey()))
 		{
-			configManager.setConfiguration("togglebuttons", "selectIcon", false);
-			openIconSearch();
-			return;
+			rebuildOverlays();
 		}
-
-		updateIcon();
-	}
-
-	private void openIconSearch()
-	{
-		clientThread.invokeLater(() ->
-		{
-			if (client.getGameState() != GameState.LOGGED_IN)
-			{
-				log.debug("Cannot open icon search while logged out");
-				return;
-			}
-
-			itemSearch
-				.tooltipText("Set button icon")
-				.onItemSelected(itemId -> configManager.setConfiguration("togglebuttons", "iconItemId", itemId))
-				.build();
-		});
-	}
-
-	private void updateIcon()
-	{
-		final int itemId = config.iconItemId();
-		overlay.setIcon(itemId >= 0 ? itemManager.getImage(itemId) : null);
 	}
 
 	@Provides

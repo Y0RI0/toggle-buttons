@@ -1,0 +1,14 @@
+package com.togglebuttons;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+class ToggleButtonsTarget
+{
+	private String pluginName;
+	private boolean disablePlugin;
+}
