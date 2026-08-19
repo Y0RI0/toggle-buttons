@@ -1,13 +1,13 @@
-package com.hotkeybuttons;
+package com.togglebuttons;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 
-public class HotkeyButtonsPluginTest
+public class ToggleButtonsPluginTest
 {
 	public static void main(String[] args) throws Exception
 	{
-		ExternalPluginManager.loadBuiltin(HotkeyButtonsPlugin.class);
+		ExternalPluginManager.loadBuiltin(ToggleButtonsPlugin.class);
 		RuneLite.main(args);
 	}
 }

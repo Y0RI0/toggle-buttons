@@ -1,4 +1,4 @@
-package com.hotkeybuttons;
+package com.togglebuttons;
 
 import java.awt.Color;
 import net.runelite.client.config.Alpha;
@@ -8,8 +8,8 @@ import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.Keybind;
 import net.runelite.client.config.Range;
 
-@ConfigGroup("hotkey-buttons")
-public interface HotkeyButtonsConfig extends Config
+@ConfigGroup("togglebuttons")
+public interface ToggleButtonsConfig extends Config
 {
 	@ConfigItem(
 		keyName = "showButton",
@@ -90,5 +90,38 @@ public interface HotkeyButtonsConfig extends Config
 	default Color pressedColor()
 	{
 		return new Color(96, 192, 255, 210);
+	}
+
+	@ConfigItem(
+		keyName = "iconItemId",
+		name = "Icon item ID",
+		description = "Item whose sprite is drawn on the button (-1 for none); set via right-click > Set icon",
+		position = 7
+	)
+	default int iconItemId()
+	{
+		return -1;
+	}
+
+	@ConfigItem(
+		keyName = "selectIcon",
+		name = "Select icon",
+		description = "Toggle on to search for an item to use as the button icon (requires being logged in)",
+		position = 8
+	)
+	default boolean selectIcon()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "targetPlugin",
+		name = "Target plugin",
+		description = "Name of the plugin to toggle on/off when the button is pressed (as shown in the plugin list, e.g. 'Inventory Viewer')",
+		position = 9
+	)
+	default String targetPlugin()
+	{
+		return "";
 	}
 }
