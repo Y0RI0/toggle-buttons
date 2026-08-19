@@ -7,11 +7,11 @@ package com.togglebuttons;
 * takes priority over a searched item icon.
 */
 
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.RuneLite;
@@ -21,18 +21,19 @@ final class ToggleButtonsImageLoader
 {
 	static final File IMAGE_DIR = new File(RuneLite.RUNELITE_DIR, "toggle-buttons");
 
-	// Icons are drawn at button size; refuse anything unreasonably large
+	// Icons are drawn at button size; larger images are scaled down on import
 	private static final int MAX_DIMENSION = 512;
 
 	private ToggleButtonsImageLoader()
 	{
 	}
 
-	// Copies a user-chosen image into the plugin directory and returns the
-	// stored file's name for persistence, or null if the image was rejected
+	// Imports a user-chosen image into the plugin directory and returns the
+	// stored file's name for persistence, or null if the file is not a
+	// readable image. Oversized images are scaled down rather than rejected.
 	static String store(String buttonId, File chosen)
 	{
-		final BufferedImage image = read(chosen);
+		BufferedImage image = read(chosen);
 		if (image == null)
 		{
 			return null;
@@ -40,9 +41,9 @@ final class ToggleButtonsImageLoader
 
 		if (image.getWidth() > MAX_DIMENSION || image.getHeight() > MAX_DIMENSION)
 		{
-			log.warn("Rejecting button image {} ({}x{}); maximum is {}x{}",
+			log.debug("Downscaling button image {} ({}x{}) to fit {}x{}",
 				chosen, image.getWidth(), image.getHeight(), MAX_DIMENSION, MAX_DIMENSION);
-			return null;
+			image = downscale(image);
 		}
 
 		if (!IMAGE_DIR.exists() && !IMAGE_DIR.mkdirs())
@@ -51,19 +52,33 @@ final class ToggleButtonsImageLoader
 			return null;
 		}
 
-		// One image per button; the extension is preserved for ImageIO
-		final String extension = extensionOf(chosen.getName());
-		final File destination = new File(IMAGE_DIR, buttonId + extension);
+		// One image per button; always stored as png since we re-encode
+		final File destination = new File(IMAGE_DIR, buttonId + ".png");
 		try
 		{
-			Files.copy(chosen.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			ImageIO.write(image, "png", destination);
 			return destination.getName();
 		}
 		catch (IOException ex)
 		{
-			log.warn("Failed to copy button image to {}", destination, ex);
+			log.warn("Failed to write button image to {}", destination, ex);
 			return null;
 		}
+	}
+
+	// Scales an image down to fit MAX_DIMENSION, preserving aspect ratio
+	private static BufferedImage downscale(BufferedImage image)
+	{
+		final double scale = (double) MAX_DIMENSION / Math.max(image.getWidth(), image.getHeight());
+		final int width = Math.max(1, (int) (image.getWidth() * scale));
+		final int height = Math.max(1, (int) (image.getHeight() * scale));
+
+		final BufferedImage scaled = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		final Graphics2D g = scaled.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g.drawImage(image, 0, 0, width, height, null);
+		g.dispose();
+		return scaled;
 	}
 
 	// Loads a stored image by the file name persisted in the button config;
@@ -121,11 +136,5 @@ final class ToggleButtonsImageLoader
 			log.warn("Failed to read button icon image: {}", file, ex);
 			return null;
 		}
-	}
-
-	private static String extensionOf(String name)
-	{
-		final int dot = name.lastIndexOf('.');
-		return dot >= 0 ? name.substring(dot) : ".png";
 	}
 }
