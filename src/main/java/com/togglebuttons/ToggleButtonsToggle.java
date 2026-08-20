@@ -106,34 +106,65 @@ class ToggleButtonsToggle
 			return;
 		}
 
+		final Mode mode = target.isDisablePlugin() ? Mode.ENABLE_DISABLE : Mode.ON_OFF;
+		switch (mode)
+		{
+			case ENABLE_DISABLE:
+				toggleEnabled(plugin, name);
+				break;
+			case ON_OFF:
+				toggleRunning(plugin, name);
+				break;
+		}
+	}
+
+	private enum Mode
+	{
+		ENABLE_DISABLE,
+		ON_OFF
+	}
+
+	// Enable/disable mode: the click flips the plugin's enabled setting in
+	// RuneLite (the plugin-list checkbox), starting or stopping it to match
+	private void toggleEnabled(Plugin plugin, String name)
+	{
+		final boolean enable = !pluginManager.isPluginEnabled(plugin);
+		pluginManager.setPluginEnabled(plugin, enable);
 		try
 		{
-			if (target.isDisablePlugin())
+			if (enable)
 			{
-				final boolean enabled = pluginManager.isPluginEnabled(plugin);
-				pluginManager.setPluginEnabled(plugin, !enabled);
-				if (enabled)
-				{
-					pluginManager.stopPlugin(plugin);
-				}
-				else
-				{
-					pluginManager.startPlugin(plugin);
-				}
-				log.debug("Toggled plugin '{}' enabled to {}", name, !enabled);
+				pluginManager.startPlugin(plugin);
 			}
 			else
 			{
-				if (pluginManager.isPluginActive(plugin))
-				{
-					pluginManager.stopPlugin(plugin);
-					log.debug("Stopped plugin '{}'", name);
-				}
-				else
-				{
-					final boolean started = pluginManager.startPlugin(plugin);
-					log.debug("Started plugin '{}': {}", name, started);
-				}
+				pluginManager.stopPlugin(plugin);
+			}
+			log.debug("Toggled plugin '{}' enabled to {}", name, enable);
+		}
+		catch (PluginInstantiationException ex)
+		{
+			log.warn("Failed to toggle plugin '{}'", name, ex);
+		}
+	}
+
+	// On/off mode: the click only toggles the plugin's running state, but
+	// enables the plugin first so starting always works
+	private void toggleRunning(Plugin plugin, String name)
+	{
+		final boolean start = !pluginManager.isPluginActive(plugin);
+		pluginManager.setPluginEnabled(plugin, true);
+		try
+		{
+			if (start)
+			{
+				pluginManager.startPlugin(plugin);
+				log.debug("Started plugin '{}'", name);
+			}
+			else
+			{
+				pluginManager.stopPlugin(plugin);
+				log.debug("Stopped plugin '{}'", name);
 			}
 		}
 		catch (PluginInstantiationException ex)

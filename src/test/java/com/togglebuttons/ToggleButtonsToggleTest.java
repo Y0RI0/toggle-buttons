@@ -204,8 +204,11 @@ public class ToggleButtonsToggleTest
 
 		for (Plugin plugin : plugins)
 		{
+			// On/off mode enables the plugin first so a later start always works,
+			// then toggles only the running state (mock is active -> stop)
+			verify(pluginManager).setPluginEnabled(plugin, true);
+			verify(pluginManager, never()).setPluginEnabled(plugin, false);
 			verify(pluginManager).stopPlugin(plugin);
-			verify(pluginManager, never()).setPluginEnabled(any(Plugin.class), any(Boolean.class));
 		}
 	}
 
