@@ -68,3 +68,15 @@ Shout out to:
 - [Custom UI Anchors](https://github.com/Car-Role/Custom-UI-Anchors) for making this plugin's buttons way more "sticky"
 - [Inventory Setups](https://github.com/dillydill123/inventory-setups) for the springboard idea of toggle-able plugins in the first place
 
+---
+
+## Development
+
+Used Temurin Java 11. Just basic Gradle wrapper dev:
+
+```sh
+./gradlew build   # compile the plugin
+./gradlew test    # run the unit tests
+./gradlew run     # launch a RuneLite development client with the plugin loaded
+./gradlew clean   # remove build outputs
+```

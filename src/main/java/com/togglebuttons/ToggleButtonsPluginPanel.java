@@ -92,7 +92,7 @@ class ToggleButtonsPluginPanel extends PluginPanel
 		setLayout(new BorderLayout(0, 10));
 		setBorder(new EmptyBorder(10, 10, 10, 10));
 
-		// Keep tooltips on screen long enough to read the longer ones
+		// Keep tooltips on screen long enough to read the longer ones, I think?
 		ToolTipManager.sharedInstance().setDismissDelay(ToggleButtonsStyle.TOOLTIP_DISMISS_MS);
 
 		// PluginPanel's internal scroll pane has no getter; find it in the wrapper
@@ -221,6 +221,7 @@ class ToggleButtonsPluginPanel extends PluginPanel
 			final java.awt.image.BufferedImage fileImage = ToggleButtonsImageLoader.load(button.getIconImagePath());
 			if (fileImage != null)
 			{
+				// scale image down if it's too large
 				final java.awt.Image scaled = fileImage.getScaledInstance(CELL_SIZE - 8, CELL_SIZE - 8, java.awt.Image.SCALE_SMOOTH);
 				cell.setIcon(new javax.swing.ImageIcon(scaled));
 			}
